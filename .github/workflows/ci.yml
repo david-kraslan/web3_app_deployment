@@ -1,0 +1,267 @@
+name: Web3 CI
+
+on:
+  pull_request:
+    branches: "master"
+
+jobs:
+  client-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
+    strategy:
+      matrix:
+        node-version: [14.x]
+        architecture: [x64]
+    steps:
+      - name: Check-out git repository  
+        uses: actions/checkout@v4
+
+      - name: USE NODEJS ${{ matrix.node-version }} - ${{ matrix.architecture }}
+        uses: actions/setup-node@v4
+
+      - name: Install project dependencies 
+        working-directory: ./client
+        run: |
+          npm i
+          npm run lint
+          npm install --save-dev --save-exact prettier
+          npm run prettier
+          npm test
+        env:
+          CI: true 
+
+      - name: Build
+        run: npm run build
+        working-directory: ./client
+
+              # Setup sonar-scanner
+      - name: Setup SonarQube
+        uses: warchant/setup-sonar-scanner@v8
+
+      - name: Analyze with SonarCloud
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: client
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.host.url=${{ secrets.SONAR_URL }}
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.sources=src/
+            -Dsonar.verbose=true
+        
+  smartcontract-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./smart_contract
+    strategy:
+      matrix:
+        node-version: [14.x]
+        architecture: [x64]
+    steps:
+      - name: Check-out git repository  
+        uses: actions/checkout@v4
+
+      - name: USE NODEJS ${{ matrix.node-version }} - ${{ matrix.architecture }}
+        uses: actions/setup-node@v4
+
+      - name: Install project dependencies 
+        working-directory: ./smart_contract
+        run: |
+          npm i
+          npm run lint
+          npm install --save-dev --save-exact prettier
+          npm run prettier
+          npm test
+        env:
+          CI: true 
+
+              # Setup sonar-scanner
+      - name: Setup SonarQube
+        uses: warchant/setup-sonar-scanner@v8
+
+      - name: Analyze with SonarCloud
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: smart_contract
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.host.url=${{ secrets.SONAR_URL }}
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.sources=.
+            -Dsonar.verbose=true
+          
+
+  client-security:
+    needs: client-test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: true 
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+        with:
+          version: latest
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  
+         
+      - name: Snyk Authenticate    
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Snyk Code Test
+        run: snyk code test --all-projects
+        continue-on-error: true
+
+  smartcontract-security:
+    needs: smartcontract-test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./smart_contract
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: true # To make sure that SARIF upload gets called
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+         
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+        with:
+          version: latest
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          
+      - name: Snyk Authenticate    
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Snyk Code Test
+        run: snyk code test --all-projects
+        continue-on-error: true
+
+  client-image:
+    needs: client-security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read 
+      security-events: write 
+      actions: read
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build and push client Docker image
+      working-directory: ./client
+      run: |
+        docker build . -t ${{ secrets.DOCKER_USERNAME }}/web3-client
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 
+        docker push ${{ secrets.DOCKER_USERNAME }}/web3-client   
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'docker.io/${{ secrets.DOCKER_USERNAME }}/web3-client'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Install Snyk CLI
+      uses: snyk/actions/setup@master
+      with:
+        snyk-token: ${{ secrets.SNYK_TOKEN }}
+       
+    - name: Snyk Authenticate    
+      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+  
+    - name: Snyk Container monitor
+      run: snyk container monitor ${{ secrets.DOCKER_USERNAME }}/web3-client --file=Dockerfile   
+      working-directory: ./client
+
+    - name: Run Snyk to check for vulnerabilities in the client Docker image
+      uses: snyk/actions/docker@master
+      with:
+        image: ${{ secrets.DOCKER_USERNAME }}/web3-client
+        args: --file=quiz-app/Dockerfile --severity-threshold=high
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      continue-on-error: true
+
+
+
+  smartcontract-image:
+    needs: smartcontract-security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read 
+      security-events: write 
+      actions: read
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build and push smartcontract Docker image
+      working-directory: ./smart_contract
+      run: |
+        docker build . -t ${{ secrets.DOCKER_USERNAME }}/web3-smartcontract
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 
+        docker push ${{ secrets.DOCKER_USERNAME }}/web3-smartcontract    
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'docker.io/${{ secrets.DOCKER_USERNAME }}/web3-smartcontract'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH' 
+        
+    - name: Install Snyk CLI
+      uses: snyk/actions/setup@master
+      with:
+        snyk-token: ${{ secrets.SNYK_TOKEN }}
+     
+    - name: Snyk Authenticate    
+      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+    - name: Snyk Container monitor
+      run: snyk container monitor ${{ secrets.DOCKER_USERNAME }}/web3-smartcontract --file=Dockerfile   
+      working-directory: ./smart_contract
+
+    - name: Run Snyk to check for vulnerabilities in the smartcontract Docker image
+      uses: snyk/actions/docker@master
+      with:
+        image: ${{ secrets.DOCKER_USERNAME }}/web3-smartcontract
+        args: --file=backend/Dockerfile --severity-threshold=high
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      continue-on-error: true 
+
+
+  k8s-manifest-scan:
+    needs: [client-security, smartcontract-security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Snyk to check Kubernetes manifest file for issues
+        uses: snyk/actions/infra@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          file: kubernetes-manifest/
+          args: --severity-threshold=high
