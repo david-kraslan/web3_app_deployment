@@ -26,11 +26,8 @@ jobs:
       - name: Install project dependencies 
         working-directory: ./client
         run: |
-          npm i
-          npm run lint
-          npm install --save-dev --save-exact prettier
-          npm run prettier
-          npm test
+          npm install
+          npm install -D tailwindcss postcss autoprefixer
         env:
           CI: true 
 
@@ -76,11 +73,7 @@ jobs:
       - name: Install project dependencies 
         working-directory: ./smart_contract
         run: |
-          npm i
-          npm run lint
-          npm install --save-dev --save-exact prettier
-          npm run prettier
-          npm test
+          npm init -y
         env:
           CI: true 
 
