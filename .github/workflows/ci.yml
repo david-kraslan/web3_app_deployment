@@ -261,9 +261,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Snyk to check Kubernetes manifest file for issues
-        uses: snyk/actions/infra@master
+        uses: snyk/actions/setup@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          file: kubernetes-manifest/
+          file: k8s_manifests/
           args: --severity-threshold=high
