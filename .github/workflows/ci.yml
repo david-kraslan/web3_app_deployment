@@ -72,10 +72,9 @@ jobs:
 
       - name: Install project dependencies 
         working-directory: ./smart_contract
-        run: |
-          npm init -y
+        run: npm init -y
         env:
-          CI: true 
+          CI: true
 
               # Setup sonar-scanner
       - name: Setup SonarQube
@@ -95,7 +94,12 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
             -Dsonar.sources=.
             -Dsonar.verbose=true
-          
+
+      - name: Test smart contract 
+        working-directory: ./smart_contract
+        run: npx hardhat test
+        env:
+          CI: true                    
 
   client-security:
     needs: client-test
