@@ -1,19 +1,46 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("transactions", function () {
-  it("Should return the new greeting once it's changed", async function () {
-    const Transactions = await ethers.getContractFactory("transactions");
-    const transactions = await Transactions.deploy("Hello, world!");
+describe("Transactions", function () {
+  let Transactions;
+  let transactions;
+  let owner;
+  let addr1;
+  let addr2;
+
+  beforeEach(async function () {
+    Transactions = await ethers.getContractFactory("Transactions");
+    [owner, addr1, addr2, _] = await ethers.getSigners();
+    transactions = await Transactions.deploy();
     await transactions.deployed();
+  });
 
-    expect(await transactions.greet()).to.equal("Hello, world!");
+  describe("Deployment", function () {
+    it("Should set the right owner", async function () {
+      expect(await transactions.owner()).to.equal(owner.address);
+    });
+  });
 
-    const setGreetingTx = await transactions.setGreeting("Hola, mundo!");
+  describe("Transactions", function () {
+    it("Should transfer funds between accounts", async function () {
+      await addr1.sendTransaction({
+        to: transactions.address,
+        value: ethers.utils.parseEther("1.0"), // Send 1 ether
+      });
 
-    // wait until the transaction is mined
-    await setGreetingTx.wait();
+      await expect(
+        transactions.connect(addr1).transfer(addr2.address, ethers.utils.parseEther("1.0"))
+      ).to.emit(transactions, "Transfer").withArgs(addr1.address, addr2.address, ethers.utils.parseEther("1.0"));
 
-    expect(await transactions.greet()).to.equal("Hola, mundo!");
+      const addr2Balance = await ethers.provider.getBalance(addr2.address);
+      expect(ethers.utils.formatEther(addr2Balance)).to.equal("10001.0");
+    });
+
+    it("Should fail if sender doesn't have enough funds", async function () {
+      await expect(
+        transactions.connect(addr1).transfer(addr2.address, ethers.utils.parseEther("1.0"))
+      ).to.be.revertedWith("Amount must be greater than zero");
+    });
   });
 });
+
