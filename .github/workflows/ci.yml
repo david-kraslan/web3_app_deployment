@@ -169,15 +169,36 @@ jobs:
       security-events: write 
       actions: read
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Build and push client Docker image
-      working-directory: ./client
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build Docker image
       run: |
-        aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 376801182676.dkr.ecr.eu-north-1.amazonaws.com
-        docker build -t web3-client .
-        docker tag web3-client:latest 376801182676.dkr.ecr.eu-north-1.amazonaws.com/davidkraslan:latest
-        docker push 376801182676.dkr.ecr.eu-north-1.amazonaws.com/davidkraslan:latest
+        IMAGE_TAG=web3-client
+        docker build -t ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG .
+
+    - name: Tag Docker image
+      run: |
+        ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
+        IMAGE_TAG=latest
+        docker tag ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
+
+    - name: Push Docker image to Amazon ECR
+      run: |
+        ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
+        IMAGE_TAG=latest
+        docker push $ECR_URI:$IMAGE_TAG
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
@@ -220,7 +241,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Build and push smartcontract Docker image
+    - name: Build and push smartcontract Docker image to ECR
       working-directory: ./smart_contract
       run: |
         docker build . -t ${{ secrets.DOCKER_USERNAME }}/web3-smartcontract
