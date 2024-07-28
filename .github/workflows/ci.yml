@@ -206,7 +206,7 @@ jobs:
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'docker.io/${{ secrets.DOCKER_USERNAME }}/web3-client'
+        image-ref: '376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}:web3-client'
         format: 'sarif'
         output: 'trivy-results.sarif'
         severity: 'CRITICAL,HIGH'
