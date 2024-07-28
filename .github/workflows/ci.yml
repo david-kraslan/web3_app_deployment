@@ -220,14 +220,14 @@ jobs:
       run: snyk auth ${{ secrets.SNYK_TOKEN }}
   
     - name: Snyk Container monitor
-      run: snyk container monitor ${{ secrets.DOCKER_USERNAME }}/web3-client --file=Dockerfile   
+      run: snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client --file=Dockerfile   
       working-directory: ./client
 
     - name: Run Snyk to check for vulnerabilities in the client Docker image
       uses: snyk/actions/docker@master
       with:
-        image: ${{ secrets.DOCKER_USERNAME }}/web3-client
-        args: --file=quiz-app/Dockerfile --severity-threshold=high
+        image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client
+        args: --file=client/Dockerfile --severity-threshold=high
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       continue-on-error: true
