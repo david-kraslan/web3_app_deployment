@@ -193,14 +193,14 @@ jobs:
       working-directory: ./client
       run: |
         ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
-        IMAGE_TAG=latest
+        IMAGE_TAG=web3-client
         docker tag ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
 
     - name: Push Docker image to Amazon ECR
       working-directory: ./client
       run: |
         ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
-        IMAGE_TAG=latest
+        IMAGE_TAG=web3-client
         docker push $ECR_URI:$IMAGE_TAG
 
     - name: Run Trivy vulnerability scanner
