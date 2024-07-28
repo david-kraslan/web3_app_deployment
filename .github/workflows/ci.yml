@@ -184,17 +184,20 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build Docker image
+      working-directory: ./client
       run: |
         IMAGE_TAG=web3-client
         docker build -t ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG .
 
     - name: Tag Docker image
+      working-directory: ./client
       run: |
         ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
         IMAGE_TAG=latest
         docker tag ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
 
     - name: Push Docker image to Amazon ECR
+      working-directory: ./client
       run: |
         ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
         IMAGE_TAG=latest
