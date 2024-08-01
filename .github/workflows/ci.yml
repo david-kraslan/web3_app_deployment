@@ -20,11 +20,12 @@ jobs:
       - name: Check-out git repository  
         uses: actions/checkout@v4
 
-      - name: USE NODEJS ${{ matrix.node-version }} - ${{ matrix.architecture }}
+      - name: Setup Node.js ${{ matrix.node-version }} - ${{ matrix.architecture }}
         uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
 
       - name: Install project dependencies 
-        working-directory: ./client
         run: |
           npm install
           npm install -D tailwindcss postcss autoprefixer
@@ -33,9 +34,7 @@ jobs:
 
       - name: Build
         run: npm run build
-        working-directory: ./client
 
-              # Setup sonar-scanner
       - name: Setup SonarQube
         uses: warchant/setup-sonar-scanner@v8
 
@@ -67,19 +66,19 @@ jobs:
       - name: Check-out git repository  
         uses: actions/checkout@v4
 
-      - name: USE NODEJS ${{ matrix.node-version }} - ${{ matrix.architecture }}
+      - name: Setup Node.js ${{ matrix.node-version }} - ${{ matrix.architecture }}
         uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
 
       - name: Install project dependencies 
-        working-directory: ./smart_contract
         run: |
-            npm init -y
-            npm install --save-dev hardhat
-            npx hardhat compile
+          npm install
+          npm install --save-dev hardhat
+          npx hardhat compile
         env:
           CI: true
 
-              # Setup sonar-scanner
       - name: Setup SonarQube
         uses: warchant/setup-sonar-scanner@v8
 
@@ -99,7 +98,6 @@ jobs:
             -Dsonar.verbose=true
 
       - name: Test smart contract 
-        working-directory: ./smart_contract
         run: npx hardhat test
         env:
           CI: true
@@ -112,20 +110,15 @@ jobs:
       run:
         working-directory: ./client
     steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        continue-on-error: true 
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          
+      - uses: actions/checkout@v4
+
       - name: Install Snyk CLI
-        uses: snyk/actions/setup@master
+        uses: snyk/actions/setup@v2
         with:
           version: latest
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  
-         
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
       - name: Snyk Authenticate    
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
@@ -133,7 +126,7 @@ jobs:
         run: snyk code test --all-projects
         continue-on-error: true
 
-smartcontract-security:
+  smartcontract-security:
     needs: smartcontract-test
     runs-on: ubuntu-latest
     defaults:
@@ -141,11 +134,13 @@ smartcontract-security:
         working-directory: ./smart_contract
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Snyk CLI
         uses: snyk/actions/setup@v2
         with:
           version: latest
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Snyk Authenticate    
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
@@ -213,8 +208,8 @@ smartcontract-security:
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
   
       - name: Snyk Container monitor
-        working-directory: ./client
         run: snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client --file=Dockerfile   
+        working-directory: ./client
 
       - name: Run Snyk to check for vulnerabilities in the client Docker image
         uses: snyk/actions/docker@v0.4.0
@@ -284,28 +279,34 @@ smartcontract-security:
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
       - name: Snyk Container monitor
-        working-directory: ./smart_contract
         run: snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-smartcontract --file=Dockerfile   
+        working-directory: ./smart_contract
 
       - name: Run Snyk to check for vulnerabilities in the smartcontract Docker image
         uses: snyk/actions/docker@v0.4.0
         with:
           image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-smartcontract
-          args: --file=backend/Dockerfile --severity-threshold=high
+          args: --file=smart_contract/Dockerfile --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
-
 
   k8s-manifest-scan:
     needs: [client-security, smartcontract-security]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Snyk to check Kubernetes manifest file for issues
-        uses: snyk/actions/setup@master
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@v2
+        with:
+          version: latest
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          file: k8s_manifests/
-          args: --severity-threshold=high
+
+      - name: Snyk Authenticate    
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run Snyk to check Kubernetes manifest file for issues
+        run: snyk iac test k8s_manifests/
+        continue-on-error: true
