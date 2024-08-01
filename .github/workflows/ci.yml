@@ -158,7 +158,7 @@ jobs:
       actions: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -229,7 +229,7 @@ jobs:
       actions: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
