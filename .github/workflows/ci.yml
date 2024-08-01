@@ -212,7 +212,7 @@ jobs:
         working-directory: ./client
 
       - name: Run Snyk to check for vulnerabilities in the client Docker image
-        uses: snyk/actions/docker@v0.4.0
+        uses: snyk/actions/docker@master
         with:
           image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client
           args: --file=client/Dockerfile --severity-threshold=high
@@ -283,7 +283,7 @@ jobs:
         working-directory: ./smart_contract
 
       - name: Run Snyk to check for vulnerabilities in the smartcontract Docker image
-        uses: snyk/actions/docker@v0.4.0
+        uses: snyk/actions/docker@master
         with:
           image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-smartcontract
           args: --file=smart_contract/Dockerfile --severity-threshold=high
@@ -295,7 +295,7 @@ jobs:
     needs: [client-security, smartcontract-security]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@master
 
       - name: Install Snyk CLI
         uses: snyk/actions/setup@master
