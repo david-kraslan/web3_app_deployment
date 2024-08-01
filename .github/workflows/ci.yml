@@ -133,27 +133,20 @@ jobs:
         run: snyk code test --all-projects
         continue-on-error: true
 
-  smartcontract-security:
+smartcontract-security:
     needs: smartcontract-test
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./smart_contract
     steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        continue-on-error: true # To make sure that SARIF upload gets called
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-         
+      - uses: actions/checkout@v4
+      
       - name: Install Snyk CLI
-        uses: snyk/actions/setup@master
+        uses: snyk/actions/setup@v2
         with:
           version: latest
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          
+
       - name: Snyk Authenticate    
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
@@ -169,70 +162,68 @@ jobs:
       security-events: write 
       actions: read
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build Docker image
-      working-directory: ./client
-      run: |
-        IMAGE_TAG=web3-client
-        docker build -t ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG .
+      - name: Build Docker image
+        working-directory: ./client
+        run: |
+          IMAGE_TAG=web3-client
+          docker build -t ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG .
 
-    - name: Tag Docker image
-      working-directory: ./client
-      run: |
-        ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
-        IMAGE_TAG=web3-client
-        docker tag ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
+      - name: Tag Docker image
+        working-directory: ./client
+        run: |
+          ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
+          IMAGE_TAG=web3-client
+          docker tag ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
 
-    - name: Push Docker image to Amazon ECR
-      working-directory: ./client
-      run: |
-        ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
-        IMAGE_TAG=web3-client
-        docker push $ECR_URI:$IMAGE_TAG
+      - name: Push Docker image to Amazon ECR
+        working-directory: ./client
+        run: |
+          ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
+          IMAGE_TAG=web3-client
+          docker push $ECR_URI:$IMAGE_TAG
 
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: '376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}:web3-client'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH'
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}:web3-client'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
 
-    - name: Install Snyk CLI
-      uses: snyk/actions/setup@master
-      with:
-        snyk-token: ${{ secrets.SNYK_TOKEN }}
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@v2
+        with:
+          snyk-token: ${{ secrets.SNYK_TOKEN }}
        
-    - name: Snyk Authenticate    
-      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+      - name: Snyk Authenticate    
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
   
-    - name: Snyk Container monitor
-      run: snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client --file=Dockerfile   
-      working-directory: ./client
+      - name: Snyk Container monitor
+        working-directory: ./client
+        run: snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client --file=Dockerfile   
 
-    - name: Run Snyk to check for vulnerabilities in the client Docker image
-      uses: snyk/actions/docker@master
-      with:
-        image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client
-        args: --file=client/Dockerfile --severity-threshold=high
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      continue-on-error: true
-
-
+      - name: Run Snyk to check for vulnerabilities in the client Docker image
+        uses: snyk/actions/docker@v0.4.0
+        with:
+          image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client
+          args: --file=client/Dockerfile --severity-threshold=high
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
 
   smartcontract-image:
     needs: smartcontract-security
@@ -242,43 +233,68 @@ jobs:
       security-events: write 
       actions: read
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Build and push smartcontract Docker image to ECR
-      working-directory: ./smart_contract
-      run: |
-        docker build . -t ${{ secrets.DOCKER_USERNAME }}/web3-smartcontract
-        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 
-        docker push ${{ secrets.DOCKER_USERNAME }}/web3-smartcontract    
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'docker.io/${{ secrets.DOCKER_USERNAME }}/web3-smartcontract'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH' 
-        
-    - name: Install Snyk CLI
-      uses: snyk/actions/setup@master
-      with:
-        snyk-token: ${{ secrets.SNYK_TOKEN }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker image
+        working-directory: ./smart_contract
+        run: |
+          IMAGE_TAG=web3-smartcontract
+          docker build -t ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG .
+
+      - name: Tag Docker image
+        working-directory: ./smart_contract
+        run: |
+          ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
+          IMAGE_TAG=web3-smartcontract
+          docker tag ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
+
+      - name: Push Docker image to Amazon ECR
+        working-directory: ./smart_contract
+        run: |
+          ECR_URI=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY_NAME }} --query "repositories[0].repositoryUri" --output text)
+          IMAGE_TAG=web3-smartcontract
+          docker push $ECR_URI:$IMAGE_TAG
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}:web3-smartcontract'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@v2
+        with:
+          snyk-token: ${{ secrets.SNYK_TOKEN }}
      
-    - name: Snyk Authenticate    
-      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+      - name: Snyk Authenticate    
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
-    - name: Snyk Container monitor
-      run: snyk container monitor ${{ secrets.DOCKER_USERNAME }}/web3-smartcontract --file=Dockerfile   
-      working-directory: ./smart_contract
+      - name: Snyk Container monitor
+        working-directory: ./smart_contract
+        run: snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-smartcontract --file=Dockerfile   
 
-    - name: Run Snyk to check for vulnerabilities in the smartcontract Docker image
-      uses: snyk/actions/docker@master
-      with:
-        image: ${{ secrets.DOCKER_USERNAME }}/web3-smartcontract
-        args: --file=backend/Dockerfile --severity-threshold=high
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      continue-on-error: true 
+      - name: Run Snyk to check for vulnerabilities in the smartcontract Docker image
+        uses: snyk/actions/docker@v0.4.0
+        with:
+          image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-smartcontract
+          args: --file=backend/Dockerfile --severity-threshold=high
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
 
 
   k8s-manifest-scan:
