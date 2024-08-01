@@ -289,8 +289,10 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-        run: snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-smartcontract --file=Dockerfile   
-        working-directory: ./smart_contract
+        working-directory: ./smart_contract          
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 376801182676.dkr.ecr.eu-north-1.amazonaws.com
+          snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-smartcontract --file=Dockerfile   
 
       - name: Run Snyk to check for vulnerabilities in the smartcontract Docker image
         uses: snyk/actions/docker@master
