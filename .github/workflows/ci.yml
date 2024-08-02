@@ -29,6 +29,8 @@ jobs:
         run: |
           npm install
           npm install -D tailwindcss postcss autoprefixer
+          npm install eslint
+          npm install prettier
         env:
           CI: true
       
