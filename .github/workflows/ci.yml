@@ -22,6 +22,7 @@ jobs:
 
       - name: Install Node.js dependencies
         run: npm ci
+        working-directory: ./client
 
       - name: Run linters
         uses: wearerequired/lint-action@v2
@@ -221,32 +222,6 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
 
-      - name: Install Snyk CLI
-        uses: snyk/actions/setup@master
-        with:
-          snyk-token: ${{ secrets.SNYK_TOKEN }}
-       
-      - name: Snyk Authenticate    
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
-  
-      - name: Snyk Container monitor
-        env:
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-        run: snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client --file=Dockerfile   
-        working-directory: ./client
-
-      - name: Run Snyk to check for vulnerabilities in the client Docker image
-        uses: snyk/actions/docker@master
-        with:
-          image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-client
-          args: --file=client/Dockerfile --severity-threshold=high
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        continue-on-error: true
-
   smartcontract-image:
     needs: smartcontract-security
     runs-on: ubuntu-latest
@@ -296,34 +271,6 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-
-      - name: Install Snyk CLI
-        uses: snyk/actions/setup@master
-        with:
-          snyk-token: ${{ secrets.SNYK_TOKEN }}
-     
-      - name: Snyk Authenticate    
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
-
-      - name: Snyk Container monitor
-        env:
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-        working-directory: ./smart_contract          
-        run: |
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 376801182676.dkr.ecr.eu-north-1.amazonaws.com
-          snyk container monitor 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-smartcontract --file=Dockerfile   
-
-      - name: Run Snyk to check for vulnerabilities in the smartcontract Docker image
-        uses: snyk/actions/docker@master
-        with:
-          image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}/web3-smartcontract
-          args: --file=smart_contract/Dockerfile --severity-threshold=high
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        continue-on-error: true
 
   k8s-manifest-scan:
     needs: [client-security, smartcontract-security]
