@@ -117,7 +117,7 @@ jobs:
       - name: Install Snyk CLI
         uses: snyk/actions/setup@master
         with:
-          version: latest
+          snyk-version: latest
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -140,7 +140,7 @@ jobs:
       - name: Install Snyk CLI
         uses: snyk/actions/setup@master
         with:
-          version: latest
+          snyk-version: latest
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -260,7 +260,7 @@ jobs:
       - name: Install Snyk CLI
         uses: snyk/actions/setup@master
         with:
-          version: latest
+          snyk-version: latest
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
