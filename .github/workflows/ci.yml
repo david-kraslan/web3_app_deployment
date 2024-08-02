@@ -21,7 +21,9 @@ jobs:
           node-version: 12
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: | 
+          npm ci
+          npm install eslint
         working-directory: ./client
 
       - name: Run linters
@@ -31,6 +33,7 @@ jobs:
           prettier: true
 
   client-test:
+    needs: run-linters
     runs-on: ubuntu-latest
     defaults:
       run:
