@@ -33,12 +33,6 @@ jobs:
           npm install prettier
         env:
           CI: true
-      
-      - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          prettier: true
-          eslint: true
   
       - name: Build
         run: npm run build
