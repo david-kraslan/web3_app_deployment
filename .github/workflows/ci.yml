@@ -7,30 +7,7 @@ on:
     branches: "main"
 
 jobs:
-  run-linters:
-    name: Run linters
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '12'
-
-      - name: Install Node.js dependencies
-        run: npm ci
-        working-directory: ./client
-
-      - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          prettier: true
-
   client-test:
-    needs: run-linters
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -53,8 +30,14 @@ jobs:
           npm install
           npm install -D tailwindcss postcss autoprefixer
         env:
-          CI: true 
-
+          CI: true
+      
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          prettier: true
+          eslint: true
+  
       - name: Build
         run: npm run build
 
