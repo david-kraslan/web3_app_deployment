@@ -1,20 +1,32 @@
-# Use a Node.js base image
-FROM node:14
+#Build Stage
+FROM node:18 AS build
 
-# Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
 RUN npm install
 
-# Copy the rest of the smart contract files
 COPY . .
 
-# Expose port (if necessary, for example, if you run a local blockchain)
+RUN npx hardhat compile
+
+#Production stage
+FROM node:18-slim AS production
+
+WORKDIR /app
+
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/artifacts ./artifacts
+COPY --from=build /app/cache ./cache
+COPY --from=build /app/contracts ./contracts
+COPY --from=build /app/scripts ./scripts
+COPY --from=build /app/hardhat.config.* ./  
+
 EXPOSE 8545
 
-# Command to run the development server
 CMD ["npx", "hardhat", "node"]
+
+
+
