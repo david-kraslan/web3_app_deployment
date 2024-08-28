@@ -25,10 +25,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
   client-build:
+    needs: client-checkout 
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./client
+        working-directory: .
     steps:
       - name: Install project dependencies 
         run: |
@@ -40,10 +41,11 @@ jobs:
         run: npm run build
 
   client-sonarcloud:
+    needs: client-build
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./client
+        working-directory: .
     steps:
       - name: Setup SonarQube
         uses: warchant/setup-sonar-scanner@v8
