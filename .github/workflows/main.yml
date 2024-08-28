@@ -7,7 +7,7 @@ on:
     branches: "main"
 
 jobs:
-  client-test:
+  client-checkout:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -19,22 +19,32 @@ jobs:
     steps:
       - name: Check-out Code  
         uses: actions/checkout@v4
-
       - name: Setup Node.js ${{ matrix.node-version }} - ${{ matrix.architecture }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
+  client-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
       - name: Install project dependencies 
         run: |
           npm install
           npm ci
         env:
           CI: true
-  
       - name: Build
         run: npm run build
 
+  client-sonarcloud:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
       - name: Setup SonarQube
         uses: warchant/setup-sonar-scanner@v8
 
@@ -104,7 +114,7 @@ jobs:
         continue-on-error: true                     
 
   client-security:
-    needs: client-test
+    needs: client-checkout
     runs-on: ubuntu-latest
     defaults:
       run:
