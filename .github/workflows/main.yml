@@ -7,7 +7,7 @@ on:
     branches: "main"
 
 jobs:
-  client-checkout:
+  client-build:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -23,14 +23,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-
-  client-build:
-    needs: client-checkout 
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
-    steps:
       - name: Install project dependencies 
         run: |
           npm install
@@ -116,7 +108,7 @@ jobs:
         continue-on-error: true                     
 
   client-security:
-    needs: client-checkout
+    needs: client-sonarcloud
     runs-on: ubuntu-latest
     defaults:
       run:
