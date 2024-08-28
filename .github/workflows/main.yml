@@ -1,4 +1,4 @@
-name: Web3 CI
+name: Web3 CI/CD
 
 on:
   push:
@@ -14,10 +14,10 @@ jobs:
         working-directory: ./client
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [18.x]
         architecture: [x64]
     steps:
-      - name: Check-out git repository  
+      - name: Check-out Code  
         uses: actions/checkout@v4
 
       - name: Setup Node.js ${{ matrix.node-version }} - ${{ matrix.architecture }}
@@ -28,9 +28,7 @@ jobs:
       - name: Install project dependencies 
         run: |
           npm install
-          npm install -D tailwindcss postcss autoprefixer
-          npm install eslint
-          npm install prettier
+          npm ci
         env:
           CI: true
   
@@ -62,7 +60,7 @@ jobs:
         working-directory: ./smart_contract
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [18.x]
         architecture: [x64]
     steps:
       - name: Check-out git repository  
