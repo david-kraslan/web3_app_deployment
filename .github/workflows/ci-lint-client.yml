@@ -26,9 +26,10 @@ jobs:
         working-directory: ./client
         run: npm ci
 
-      - name: Run linters
+      - name: Run ESLint
         working-directory: ./client
-        uses: wearerequired/lint-action@v2
-        with:
-          eslint: true
-          prettier: true
+        run: npx eslint .
+
+      - name: Run Prettier
+        working-directory: ./client
+        run: npx prettier --check .
