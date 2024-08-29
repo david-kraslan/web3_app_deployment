@@ -23,6 +23,7 @@ jobs:
           node-version: 18
 
       - name: Install Node.js dependencies
+        working-directory: ./client
         run: npm ci
 
       - name: Run linters
