@@ -24,20 +24,18 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install project dependencies 
-        run: |
-          npm install
-          npm ci
+        run: npm ci
         env:
           CI: true
       - name: Build
         run: npm run build
 
-  client-sonarcloud:
+  client-sonarcloud-scan:
     needs: client-build
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: .
+        working-directory: ./client
     steps:
       - name: Setup SonarQube
         uses: warchant/setup-sonar-scanner@v8
@@ -108,7 +106,7 @@ jobs:
         continue-on-error: true                     
 
   client-security:
-    needs: client-sonarcloud
+    needs: client-sonarcloud-scan
     runs-on: ubuntu-latest
     defaults:
       run:
