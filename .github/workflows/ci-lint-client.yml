@@ -1,4 +1,4 @@
-name: Lint-client
+name: Lint
 
 on:
   push:
@@ -12,24 +12,24 @@ jobs:
   run-linters:
     name: Run linters
     runs-on: ubuntu-latest
+    defaults:
+        run:
+          working-directory: ./client
 
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v1
         with:
           node-version: 18
 
       - name: Install Node.js dependencies
-        working-directory: ./client
         run: npm ci
 
-      - name: Run ESLint
-        working-directory: ./client
-        run: npx eslint .
-
-      - name: Run Prettier
-        working-directory: ./client
-        run: npx prettier --check .
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          eslint: true
+          prettier: true
