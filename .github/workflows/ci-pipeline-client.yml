@@ -30,7 +30,7 @@ jobs:
       - name: Run Super Linter
         uses: github/super-linter@v5
         env:
-          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_ALL_CODEBASE: true
           VALIDATE_JS: true
           GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
 
