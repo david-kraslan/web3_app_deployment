@@ -213,14 +213,13 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-        
+
       - name: Snyk Scan Docker Image
-        uses: snyk/actions/docker@master
-        with:
-          image: web3-client:latest
-          dockerfile: ./Dockerfile
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk auth $SNYK_TOKEN
+          snyk container test web3-client:latest --all-projects
 
   trivy_scan:
     name: Trivy Docker Image Scan
