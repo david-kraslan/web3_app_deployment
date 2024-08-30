@@ -108,7 +108,7 @@ jobs:
           ##Super Lint settings
           VALIDATE_ALL_CODEBASE: false
           IGNORE_GITIGNORED_FILES: true
-          DEFAULT_BRANCH: master
+          DEFAULT_BRANCH: main
           SAVE_SUPER_LINTER_OUTPUT: true
           DISABLE_ERRORS: true ##Dont use in production environment!!!!!
           CREATE_LOG_FILE: true
@@ -117,34 +117,36 @@ jobs:
           SUPER_LINTER_OUTPUT_DIRECTORY_NAME: super-linter-output
           GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
 
-  build:
-    name: Build Application
+  client-build:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./client
-    needs: lint
+    strategy:
+      matrix:
+        node-version: [18.x]
+        architecture: [x64]
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Check-out Code  
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js ${{ matrix.node-version }} - ${{ matrix.architecture }}
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies
-        working-directory: ./client
+      - name: Install project dependencies 
         run: npm ci
+        env:
+          CI: true
 
-      - name: Build the project
-        working-directory: ./client
+      - name: Build
         run: npm run build
 
   sonarcloud:
     name: SonarCloud Quality Gate
     runs-on: ubuntu-latest
-    needs: build
+    needs: client-build
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
