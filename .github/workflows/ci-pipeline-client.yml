@@ -182,6 +182,13 @@ jobs:
     name: Build Client Docker Image
     runs-on: ubuntu-latest
     needs: sonarcloud
+    defaults:
+      run:
+        working-directory: ./client
+    strategy:
+      matrix:
+        node-version: [18.x]
+        architecture: [x64]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -196,11 +203,21 @@ jobs:
     name: Snyk Docker Image Scan
     runs-on: ubuntu-latest
     needs: docker_build
+    defaults:
+      run:
+        working-directory: ./client
+    strategy:
+      matrix:
+        node-version: [18.x]
+        architecture: [x64]
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        
       - name: Snyk Scan Docker Image
         uses: snyk/actions/docker@master
         with:
-          image: myapp:latest
+          image: web3-client:latest
           dockerfile: ./Dockerfile
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
