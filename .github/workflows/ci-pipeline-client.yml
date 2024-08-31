@@ -209,28 +209,20 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
           IMAGE_TAG: latest
-        run: docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          echo "image=$REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Snyk Docker image vulnerability scan
         uses: snyk/actions/docker@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-          IMAGE_TAG: latest
         with:
-          image: $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          image: ${{ env.image }}
         continue-on-error: true ##Dont use in production environment!!!!!
 
       - name: Trivy Docker image vulnerability scan
         uses: aquasecurity/trivy-action@0.20.0
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-          IMAGE_TAG: latest
         with:
-          image-ref: '$REGISTRY/$REPOSITORY:$IMAGE_TAG'
+          image-ref: '${{ env.image }}'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
