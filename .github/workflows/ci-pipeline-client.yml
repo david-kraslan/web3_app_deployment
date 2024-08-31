@@ -234,7 +234,7 @@ jobs:
 
       - name: Push into ECR
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: latest
         run: docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG 
