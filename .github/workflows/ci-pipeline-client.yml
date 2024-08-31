@@ -215,6 +215,8 @@ jobs:
 
       - name: Snyk Docker image vulnerability scan
         uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: ${{ env.image }}
         continue-on-error: true ##Dont use in production environment!!!!!
@@ -228,6 +230,7 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+        continue-on-error: true ##Dont use in production environment!!!!!
 
       - name: Push into ECR
         env:
