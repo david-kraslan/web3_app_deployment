@@ -219,7 +219,23 @@ jobs:
           REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
           IMAGE_TAG: latest
         with:
-          image: $REGISTRY/$REPOSITORY:$IMAGE_TAG 
+          image: $REGISTRY/$REPOSITORY:$IMAGE_TAG
+        continue-on-error: true ##Dont use in production environment!!!!!
+
+      - name: Trivy Docker image vulnerability scan
+        uses: aquasecurity/trivy-action@0.20.0
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: latest
+        with:
+          image-ref: '$REGISTRY/$REPOSITORY:$IMAGE_TAG'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
 
       - name: Push into ECR
         env:
