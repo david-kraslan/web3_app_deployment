@@ -15,10 +15,6 @@ jobs:
     defaults:
       run:
         working-directory: ./client
-    strategy:
-      matrix:
-        node-version: [18.x]
-        architecture: [x64]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4.1.7
@@ -156,10 +152,6 @@ jobs:
     defaults:
       run:
         working-directory: ./client
-    strategy:
-      matrix:
-        node-version: [18.x]
-        architecture: [x64]
     steps:
       - name: Check-out Code  
         uses: actions/checkout@v4.1.7
@@ -189,10 +181,6 @@ jobs:
     defaults:
       run:
         working-directory: ./client
-    strategy:
-      matrix:
-        node-version: [18.x]
-        architecture: [x64]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4.1.7
