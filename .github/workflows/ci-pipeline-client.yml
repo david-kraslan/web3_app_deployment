@@ -1,4 +1,4 @@
-name: CI Pipeline Client
+name: CI Pipeline Web3 Client
 
 on:
   push:
@@ -15,9 +15,13 @@ jobs:
     defaults:
       run:
         working-directory: ./client
+    strategy:
+      matrix:
+        node-version: [18.x]
+        architecture: [x64]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.1.7
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -130,7 +134,7 @@ jobs:
         architecture: [x64]
     steps:
       - name: Check-out Code  
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.7
 
       - name: Setup Node.js ${{ matrix.node-version }} - ${{ matrix.architecture }}
         uses: actions/setup-node@v4
@@ -158,7 +162,7 @@ jobs:
         architecture: [x64]
     steps:
       - name: Check-out Code  
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.7
 
       - name: Setup SonarQube
         uses: warchant/setup-sonar-scanner@v8
@@ -191,7 +195,7 @@ jobs:
         architecture: [x64]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.1.7
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -208,7 +212,7 @@ jobs:
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-          IMAGE_TAG: latest
+          IMAGE_TAG: web3-client-latest
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           echo "image=$REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
@@ -233,8 +237,4 @@ jobs:
         continue-on-error: true ##Dont use in production environment!!!!!
 
       - name: Push into ECR
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-          IMAGE_TAG: latest
-        run: docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG 
+        run: docker push ${{ env.image }}
