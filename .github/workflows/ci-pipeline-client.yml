@@ -178,8 +178,8 @@ jobs:
             -Dsonar.sources=src/
             -Dsonar.verbose=true
 
-  docker_build:
-    name: Build Client Docker Image
+  docker_image:
+    name: Build, Scan and push Client Docker Image to ECR
     runs-on: ubuntu-latest
     needs: sonarcloud
     defaults:
@@ -193,69 +193,37 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Build Docker image
-        run: docker build -t web3-client:latest .
-
-  snyk_scan:
-    name: Snyk Docker Image Scan
-    runs-on: ubuntu-latest
-    needs: docker_build
-    defaults:
-      run:
-        working-directory: ./client
-    strategy:
-      matrix:
-        node-version: [18.x]
-        architecture: [x64]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Snyk Scan Docker Image
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-          snyk auth $SNYK_TOKEN
-          snyk container test web3-client:latest --all-projects
-
-  trivy_scan:
-    name: Trivy Docker Image Scan
-    runs-on: ubuntu-latest
-    needs: snyk_scan
-    steps:
-      - name: Install Trivy
-        run: |
-          sudo apt-get install -y wget
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.29.2/trivy_0.29.2_Linux-64bit.deb
-          sudo dpkg -i trivy_0.29.2_Linux-64bit.deb
-
-      - name: Trivy Scan
-        run: trivy image --severity HIGH,CRITICAL --exit-code 1 web3-client:latest
-
-  docker_push:
-    name: Push Docker Image to ECR
-    runs-on: ubuntu-latest
-    needs: trivy_scan
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Log in to Amazon ECR
+      - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Tag Docker Image
-        run: docker tag myapp:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/myapp:latest
+      - name: Build Docker image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: latest
+        run: docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
 
-      - name: Push Docker Image to ECR
-        run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/myapp:latest
+      - name: Snyk Docker image vulnerability scan
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: latest
+        with:
+          image: $REGISTRY/$REPOSITORY:$IMAGE_TAG 
+
+      - name: Push into ECR
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+        run: docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG 
