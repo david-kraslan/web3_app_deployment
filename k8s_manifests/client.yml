@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: client
-        image: davidkraslan/web3-client:latest
+        image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/web3/app
       ports:
       - containerPort: 8080
 ---
