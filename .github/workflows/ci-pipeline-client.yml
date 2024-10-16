@@ -200,7 +200,7 @@ jobs:
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ secrets.ECR_CLIENT_REPOSITORY_NAME }}
-          IMAGE_TAG: web3-client-latest
+          IMAGE_TAG: web3-client
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           echo "image=$REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
