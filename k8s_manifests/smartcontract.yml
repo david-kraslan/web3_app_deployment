@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: smartcontract
-  namespace: web3
+  namespace: smartcontract
   labels:
     app: smartcontract
 spec:
@@ -30,7 +30,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: smartcontract-service
-  namespace: web3
+  namespace: smartcontract
 spec:
   selector:
     app: smartcontract
