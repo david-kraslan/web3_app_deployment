@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: smartcontract
-        image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/web3/smart_contract/app:web3-smartcontract-latest
+        image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/web3/smart_contract/web3-smartcontract-latest
         ports:
         - containerPort: 8545
 ---
