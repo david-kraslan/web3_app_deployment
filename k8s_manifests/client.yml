@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: client
-  namespace: client
+  namespace: web3app
   labels:
     app: client
 spec:
@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: client
-        image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/web3/client/web3-client-latest
+        image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/web3/client/web3-client:latest
       ports:
       - containerPort: 8080
 ---
@@ -30,7 +30,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: client-service
-  namespace: client
+  namespace: web3app
 spec:
   selector:
     app: client
