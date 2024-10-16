@@ -199,7 +199,7 @@ jobs:
       - name: Build Docker image
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+          REPOSITORY: ${{ secrets.ECR_CLIENT_REPOSITORY_NAME }}
           IMAGE_TAG: web3-client-latest
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
