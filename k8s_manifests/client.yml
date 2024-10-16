@@ -24,7 +24,7 @@ spec:
       - name: client
         image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/web3/client:web3-client
       ports:
-      - containerPort: 3000
+      - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -35,6 +35,6 @@ spec:
   selector:
     app: client
   ports:
-  - port: 3000
+  - port: 8080
     protocol: TCP
   type: ClusterIP
