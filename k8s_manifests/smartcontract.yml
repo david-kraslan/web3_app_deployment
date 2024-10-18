@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: smartcontract
+  name: smartcontract-deployment
   namespace: web3app
   labels:
     app: smartcontract

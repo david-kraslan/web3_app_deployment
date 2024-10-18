@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client
+  name: client-deployment
   namespace: web3app
   labels:
     app: client
@@ -24,7 +24,7 @@ spec:
       - name: client
         image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/web3/client:web3-client
       ports:
-      - containerPort: 8080
+      - containerPort: 3000
 ---
 apiVersion: v1
 kind: Service
@@ -35,6 +35,7 @@ spec:
   selector:
     app: client
   ports:
-  - port: 8080
-    protocol: TCP
-  type: ClusterIP
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer
