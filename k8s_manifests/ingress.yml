@@ -10,7 +10,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-    - host: ae344f815df7a4231856f7fa68d79eeb-0adec61252b8667e.elb.eu-north-1.amazonaws.com
+    - host: a0d5177b3aec54d4ca08ba3a35660b0c-88195e1c3a472647.elb.eu-north-1.amazonaws.com
       http:
         paths:
           - path: /smart-contract
