@@ -1,30 +1,19 @@
-#Build Stage
-FROM node:18 AS build
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json .
 
-RUN npm install
+RUN npm install && npm i -g serve
 
 COPY . .
 
 RUN npm run build
 
-#Production Stage
-FROM node:18-slim AS production
-
-WORKDIR /app
-
-COPY --from=build /app/package*.json ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-
-RUN npm install -g serve
-
 EXPOSE 3000
 
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD [ "serve", "-s", "dist" ]
+
 
 
 
