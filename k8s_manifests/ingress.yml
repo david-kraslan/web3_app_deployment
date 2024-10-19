@@ -7,8 +7,9 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    kubernetes.io/ingress.class: "nginx"
 spec:
-  ingressClassName: alb
+  ingressClassName: nginx
   rules:
     - host: a177d5aa9b3534929b74590fd10c91a3-5cd71ecbbb3a7712.elb.eu-north-1.amazonaws.com
       http:
