@@ -11,7 +11,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: a177d5aa9b3534929b74590fd10c91a3-5cd71ecbbb3a7712.elb.eu-north-1.amazonaws.com
+    - host: ac501aef0b5814407914595f55bffd82-37091b6e41589871.elb.eu-north-1.amazonaws.com
       http:
         paths:
           - path: /smart-contract
