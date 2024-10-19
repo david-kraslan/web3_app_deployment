@@ -20,7 +20,7 @@ spec:
               service:
                 name: smart-contract-service
                 port:   
-                  number: 80
+                  number: 8545
           - path: /
             pathType: Prefix
             backend:
