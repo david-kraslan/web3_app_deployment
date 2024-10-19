@@ -37,6 +37,5 @@ spec:
   type: NodePort
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 8545
+      port: 8545
 
