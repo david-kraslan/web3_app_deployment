@@ -34,7 +34,7 @@ metadata:
 spec:
   selector:
     app: smartcontract
-  type: ClusterIP
+  type: NodePort
   ports:
     - protocol: TCP
       port: 8545
