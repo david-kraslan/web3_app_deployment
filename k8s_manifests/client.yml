@@ -34,7 +34,8 @@ metadata:
 spec:
   selector:
     app: client
+  type: NodePort
   ports:
     - protocol: TCP
-      port: 80
-  type: ClusterIP
+      port: 3000
+      targetPort: 80
