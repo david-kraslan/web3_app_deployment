@@ -34,7 +34,7 @@ metadata:
 spec:
   selector:
     app: smartcontract
-  type: NodePort
+  type: NodePort #experimental
   ports:
     - protocol: TCP
       port: 8545
