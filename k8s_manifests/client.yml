@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: client
-        image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/web3/client:web3-client
+        image: 376801182676.dkr.ecr.eu-north-1.amazonaws.com/web3/client:web3-client:latest
       ports:
       - containerPort: 3000
 ---
