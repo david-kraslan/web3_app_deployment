@@ -26,7 +26,7 @@ COPY --from=build /app/hardhat.config.* ./
 
 EXPOSE 8545
 
-CMD ["npx", "hardhat", "node", "--hostname", "ab492fb2f6d9840a69eb4c0c3e04bda8-afd03f1f5d11083b.elb.eu-north-1.amazonaws.com"]
+CMD ["npx", "hardhat", "node", "--hostname", "af191c2abae6140acae4900ea4edba89-7eee2e0e8c64aa90.elb.eu-north-1.amazonaws.com/smart-contract"]
 
 
 
